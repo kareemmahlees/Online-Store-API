@@ -2,17 +2,17 @@ import time
 from rich.console import Console
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from .core.config import settings
 
 console = Console()
 
 while True:
     try:
         conn = psycopg2.connect(
-            database="ecommerce",
-            user="postgres",
-            port="5432",
-            password="kareem.boss",
-            cursor_factory=RealDictCursor,
+            database=settings.database,
+            user=settings.user,
+            port=settings.port,
+            password=settings.password,
         )
         cr = conn.cursor()
         console.print(

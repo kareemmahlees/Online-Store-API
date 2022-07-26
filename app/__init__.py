@@ -13,6 +13,7 @@ while True:
             user=settings.user,
             port=settings.port,
             password=settings.password,
+            cursor_factory=RealDictCursor,
         )
         cr = conn.cursor()
         console.print(

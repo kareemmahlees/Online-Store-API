@@ -46,3 +46,8 @@ class UserUpdate(BaseModel):
     password: str = None
     created_at: datetime.date = None
     total_transactions: int = None
+
+
+class UserIn(BaseModel):
+    id: UUID4
+    username: EmailStr

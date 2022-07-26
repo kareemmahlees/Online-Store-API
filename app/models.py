@@ -24,6 +24,14 @@ class ProductIn(BaseModel):
 
 
 class User(BaseModel):
+    id: UUID4
+    username: EmailStr
+    password: str
+    created_at: datetime.date
+    total_transactions: int
+
+
+class UserCreate(BaseModel):
     username: EmailStr
     password: str
     created_at: datetime.date
@@ -51,3 +59,7 @@ class UserUpdate(BaseModel):
 class UserIn(BaseModel):
     id: UUID4
     username: EmailStr
+
+
+class TokenData(BaseModel):
+    id: UUID4

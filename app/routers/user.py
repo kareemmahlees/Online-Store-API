@@ -1,6 +1,8 @@
-from xml.sax import default_parser_list
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import UUID4
+from .. import oauth2
+
+from app import utils
 
 from .. import conn, cr, models
 
@@ -27,13 +29,13 @@ def get_users(id: UUID4 = Query(default=None), limit: int = Query(default=None))
         return user
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def create_user(user_data: models.User):
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=models.UserReturn)
+def create_user(user_data: models.UserCreate):
     cr.execute(
         """ INSERT INTO users(id,username,password,created_at,total_transactions) VALUES (uuid_generate_v4(),%s,%s,%s,%s) RETURNING *""",
         (
             user_data.username,
-            user_data.password,
+            utils.hash(user_data.password),
             user_data.created_at,
             user_data.total_transactions,
         ),
@@ -43,9 +45,9 @@ def create_user(user_data: models.User):
     return user_created
 
 
-@router.delete("/{id}")
-def delete_user(id: UUID4):
-    cr.execute("""DELETE FROM users WHERE id=%s RETURNING *""", (str(id),))
+@router.delete("/")
+def delete_user(current_user=Depends(oauth2.get_current_user)):
+    cr.execute("""DELETE FROM users WHERE id=%s RETURNING *""", (str(current_user.id),))
     user_deleted = cr.fetchone()
     if not user_deleted:
         raise HTTPException(
@@ -56,14 +58,16 @@ def delete_user(id: UUID4):
 
 
 @router.put("/{id}")
-def update_user(id: UUID4, update_data: models.UserUpdate):
+def update_user(
+    update_data: models.UserUpdate, current_user=Depends(oauth2.get_current_user)
+):
     update_data = update_data.dict(exclude_unset=True)
     # todo find out how to loop and enter values in query automaticaly
     cr.execute(
         """UPDATE users SET {} WHERE id = %s RETURNING *""".format(
             ",".join([f"{key} = {value}" for key, value in update_data.items()])
         ),
-        (str(id),),
+        (current_user.id,),
     )
     user_updated = cr.fetchone()
     if not user_updated:

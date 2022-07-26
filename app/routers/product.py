@@ -1,6 +1,4 @@
-from turtle import update
-from uuid import uuid4
-from fastapi import APIRouter, Body, Query, HTTPException, Response, status
+from fastapi import APIRouter, Query, HTTPException, Response, status
 from pydantic import UUID4
 from .. import conn, cr, models
 
@@ -8,7 +6,7 @@ router = APIRouter(tags=["product"], prefix="/products")
 
 
 @router.get("/", response_model=models.ProductOut | models.Product)
-def get_poroducts(id: UUID4 = Query(default=None), limit: int = Query(default=None)):
+def get_products(id: UUID4 = Query(default=None), limit: int = Query(default=None)):
     if id == None:
         cr.execute(
             """ SELECT * FROM product Limit %s """,
@@ -40,6 +38,7 @@ def create_product(product_data: models.ProductIn):
         ),
     )
     product_created = cr.fetchone()
+    conn.commit()
     return product_created
 
 
